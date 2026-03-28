@@ -1,75 +1,70 @@
 /**
- * 成长日记 - 日记列表与编辑
+ * 成长日记 - 日记列表（真实数据版）
  *
- * 核心功能：
- * - 日记时间线（按日期分组）
- * - 写日记（富文本 + 心情 + 标签）
- * - 日记模板引导
- * - 照片附件
- * - 日记搜索与筛选
+ * V1.0.0.3: 接入 Supabase 数据库
  */
-import { ScrollView, Text, View, TouchableOpacity, FlatList } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-// ============================================================================
-// Mock Data
-// ============================================================================
-
-const mockEntries = [
-  {
-    id: "1",
-    date: "2026-03-27",
-    mood: "😄",
-    title: "Productive Day!",
-    excerpt: "Finished the app base setup and started working on the diary feature...",
-    tags: ["work", "progress"],
-  },
-  {
-    id: "2",
-    date: "2026-03-26",
-    mood: "🙂",
-    title: "Calm Morning",
-    excerpt: "Woke up early, went for a walk. The weather was beautiful...",
-    tags: ["health", "mindfulness"],
-  },
-  {
-    id: "3",
-    date: "2026-03-25",
-    mood: "😐",
-    title: "Busy but OK",
-    excerpt: "Lots of meetings today. Need to find a better balance...",
-    tags: ["work", "reflection"],
-  },
-];
+import { useState, useCallback } from 'react';
+import { Text, View, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getDiaries, deleteDiary } from '@/db/diaries';
+import type { Diary } from '@/types/database';
+import { MOOD_EMOJI } from '@/types/database';
+import { useAuthStore } from '@/store/auth';
 
 // ============================================================================
 // Components
 // ============================================================================
 
-function DiaryCard({ entry }: { entry: typeof mockEntries[0] }) {
+function DiaryCard({ entry, onDelete }: { entry: Diary; onDelete: (id: string) => void }) {
+  const router = useRouter();
+  const status = useAuthStore((s) => s.status);
+
   return (
-    <TouchableOpacity className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+    <TouchableOpacity
+      className="bg-white rounded-2xl p-4 mb-3 shadow-sm"
+      onPress={() => {
+        if (status === 'authenticated') {
+          router.push({ pathname: '/(growth)/diary-detail', params: { id: entry.id } });
+        }
+      }}
+      activeOpacity={0.7}
+    >
       <View className="flex-row items-center mb-2">
-        <Text className="text-2xl mr-3">{entry.mood}</Text>
+        {entry.mood && (
+          <Text className="text-2xl mr-3">{MOOD_EMOJI[entry.mood]}</Text>
+        )}
         <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-800">
+          <Text className="text-base font-semibold text-gray-800" numberOfLines={1}>
             {entry.title}
           </Text>
-          <Text className="text-xs text-gray-400">{entry.date}</Text>
+          <Text className="text-xs text-gray-400">{entry.diary_date}</Text>
         </View>
+        {entry.is_bookmarked && <Text className="text-lg ml-2">⭐</Text>}
       </View>
+
       <Text className="text-sm text-gray-600 leading-5" numberOfLines={2}>
-        {entry.excerpt}
+        {entry.content || 'No content'}
       </Text>
-      <View className="flex-row gap-2 mt-3">
-        {entry.tags.map((tag) => (
-          <View
-            key={tag}
-            className="bg-blue-50 px-3 py-1 rounded-full"
-          >
-            <Text className="text-xs text-blue-600">#{tag}</Text>
-          </View>
-        ))}
+
+      {/* Tags */}
+      {entry.tags && entry.tags.length > 0 && (
+        <View className="flex-row gap-2 mt-3 flex-wrap">
+          {entry.tags.map((tag) => (
+            <View
+              key={tag.id}
+              className="bg-blue-50 px-3 py-1 rounded-full"
+            >
+              <Text className="text-xs text-blue-600">#{tag.name}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Word count */}
+      <View className="flex-row items-center mt-2">
+        <Text className="text-xs text-gray-400">{entry.word_count} words</Text>
       </View>
     </TouchableOpacity>
   );
@@ -80,35 +75,80 @@ function DiaryCard({ entry }: { entry: typeof mockEntries[0] }) {
 // ============================================================================
 
 export default function DiaryScreen() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['diaries', page],
+    queryFn: () => getDiaries({ page, pageSize: 20 }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDiary,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['diaries'] });
+    },
+  });
+
+  const handleDelete = useCallback((id: string) => {
+    deleteMutation.mutate(id);
+  }, [deleteMutation]);
+
+  const onLoadMore = useCallback(() => {
+    if (data && data.data.length < data.count) {
+      setPage((p) => p + 1);
+    }
+  }, [data]);
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="px-5 pt-4 pb-3">
         <Text className="text-2xl font-bold text-gray-900">My Journal 📓</Text>
         <Text className="text-sm text-gray-500 mt-1">
-          {mockEntries.length} entries this month
+          {data?.count ?? 0} entries
         </Text>
       </View>
 
-      {/* Diary Entries List */}
+      {/* Diary List */}
       <FlatList
-        data={mockEntries}
+        data={data?.data ?? []}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <DiaryCard entry={item} />}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+        renderItem={({ item }) => (
+          <DiaryCard entry={item} onDelete={handleDelete} />
+        )}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor="#3B82F6"
+          />
+        }
         ListEmptyComponent={
           <View className="flex-1 items-center justify-center py-20">
             <Text className="text-6xl mb-4">📝</Text>
             <Text className="text-lg text-gray-500">No diary entries yet</Text>
             <Text className="text-sm text-gray-400 mt-1">
-              Start writing your first entry!
+              Tap + to write your first entry!
             </Text>
           </View>
+        }
+        onEndReached={onLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isLoading ? (
+            <ActivityIndicator className="py-4" color="#3B82F6" />
+          ) : null
         }
       />
 
       {/* Floating Add Button */}
-      <TouchableOpacity className="absolute bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full items-center justify-center shadow-lg">
+      <TouchableOpacity
+        className="absolute bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full items-center justify-center shadow-lg"
+        onPress={() => router.push('/(growth)/diary-edit')}
+      >
         <Text className="text-white text-2xl font-light">+</Text>
       </TouchableOpacity>
     </SafeAreaView>
