@@ -1,12 +1,13 @@
 import "@/global.css";
 import "@/locales/i18n";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack, Redirect } from "expo-router";
+import { Stack, Redirect, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator, Text } from "react-native";
 import { initSupabase } from "@/services/supabase";
 import { initRevenueCat } from "@/services/revenuecat";
 import { initOneSignal } from "@/services/onesignal";
+import { useAuthStore } from "@/store/auth";
 
 // ============================================================================
 // Query Client
@@ -38,16 +39,46 @@ const initServices = async () => {
 };
 
 // ============================================================================
+// Auth Guard
+// ============================================================================
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const status = useAuthStore((s) => s.status);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/(auth)/sign-in");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#3B82F6" />
+        <Text className="mt-4 text-sm text-gray-500">Loading...</Text>
+      </View>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+// ============================================================================
 // Root Layout
 // ============================================================================
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
+  const bootstrap = useAuthStore((s) => s.bootstrap);
 
   useEffect(() => {
-    initServices().then(() => {
+    const init = async () => {
+      await initServices();
+      await bootstrap();
       setIsReady(true);
-    });
+    };
+    init();
   }, []);
 
   if (!isReady) {
@@ -61,13 +92,19 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(growth)"
-          options={{ headerShown: false }}
-        />
-      </Stack>
+      <AuthGuard>
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(growth)"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="(auth)"
+            options={{ headerShown: false }}
+          />
+        </Stack>
+      </AuthGuard>
     </QueryClientProvider>
   );
 }

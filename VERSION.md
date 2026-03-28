@@ -27,3 +27,4 @@ V{主}.{次}.{功能}.{构建}
 |--------|------|------|
 | V1.0.0.0 | 2026-03-28 | 初始提交：UI骨架5Tab + Supabase/RevenueCat/OneSignal服务层封装 + Expo Router导航 |
 | V1.0.0.1 | 2026-03-28 | Supabase数据库设计（10张表+RLS+Storage）、TypeScript类型定义、数据库操作层（7个Repository模块） |
+| V1.0.0.2 | 2026-03-28 | 认证系统：Zustand Auth Store + 登录/注册/邮箱确认页面 + 根布局认证路由守卫 + RevenueCat/OneSignal用户关联 |

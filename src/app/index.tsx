@@ -1,12 +1,20 @@
 import { Redirect } from "expo-router";
+import { useAuthStore } from "@/store/auth";
 
 /**
- * 首页 - 自动重定向到成长日记系统
- * 
- * 后续可改为：
- * - 登录检测 → 未登录跳登录页
- * - 已登录 → 跳 (growth) tab
+ * App 入口
+ *
+ * 根据认证状态重定向：
+ * - 已登录 → (growth) 主界面
+ * - 未登录 → (auth) 登录页
  */
 export default function Index() {
-  return <Redirect href="/(growth)" />;
+  const status = useAuthStore((s) => s.status);
+
+  if (status === "authenticated") {
+    return <Redirect href="/(growth)" />;
+  }
+
+  // RootLayout 的 AuthGuard 会处理 unauthenticated 跳转
+  return null;
 }
