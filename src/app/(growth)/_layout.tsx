@@ -9,7 +9,7 @@
  * - (tabs)/profile  → 个人中心
  */
 import { Tabs } from "expo-router";
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function GrowthLayout() {
   return (
@@ -31,8 +31,8 @@ export default function GrowthLayout() {
         name="index"
         options={{
           title: "Today",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="home" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
           ),
           headerShown: false,
         }}
@@ -41,8 +41,8 @@ export default function GrowthLayout() {
         name="diary"
         options={{
           title: "Diary",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="book" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book" size={size} color={color} />
           ),
         }}
       />
@@ -50,8 +50,8 @@ export default function GrowthLayout() {
         name="plan"
         options={{
           title: "Plan",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="clipboard" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="clipboard" size={size} color={color} />
           ),
         }}
       />
@@ -59,8 +59,8 @@ export default function GrowthLayout() {
         name="stats"
         options={{
           title: "Stats",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="chart" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart" size={size} color={color} />
           ),
         }}
       />
@@ -68,49 +68,11 @@ export default function GrowthLayout() {
         name="profile"
         options={{
           title: "Me",
-          tabBarIcon: ({ color }) => (
-            <TabIcon name="user" color={color} />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person" size={size} color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
-
-// ============================================================================
-// Tab Icon Placeholder
-// ============================================================================
-
-/**
- * 临时 Tab 图标组件
- * TODO: 替换为 @expo/vector-icons 中的 SF Symbols
- */
-function TabIcon({
-  name,
-  color,
-  size = 24,
-}: {
-  name: string;
-  color: string;
-  size?: number;
-}) {
-  // 简单的文字图标占位，后续替换为 Ionicons
-  const icons: Record<string, string> = {
-    home: "🏠",
-    book: "📓",
-    clipboard: "📋",
-    chart: "📊",
-    user: "👤",
-  };
-
-  return (
-    <View className="items-center justify-center" style={{ width: size, height: size }}>
-      {/* @ts-expect-error emoji as icon placeholder */}
-      <Text style={{ fontSize: size * 0.6, color }}>
-        {icons[name] || "⬡"}
-      </Text>
-    </View>
-  );
-}
-
-

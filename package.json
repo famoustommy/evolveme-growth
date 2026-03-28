@@ -1,6 +1,6 @@
 {
   "name": "evolveme-app-base",
-  "version": "1.0.0.4",
+  "version": "1.0.0.5",
   "description": "A production-ready Expo template with TypeScript, NativeWind, i18n, authentication, and API client",
   "main": "expo-router/entry",
   "bin": {
