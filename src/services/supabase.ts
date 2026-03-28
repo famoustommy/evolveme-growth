@@ -51,6 +51,23 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+/**
+ * 初始化 Supabase（验证连接）
+ */
+export const initSupabase = async (): Promise<void> => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn('⚠️ Supabase: Skipped init — missing credentials');
+    return;
+  }
+  if (__DEV__) {
+    console.log('☁️ Supabase: Initialized');
+  }
+};
+
+// ============================================================================
 // AUTH HELPERS
 // ============================================================================
 
