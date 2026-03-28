@@ -1,0 +1,25 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "app": {
+    "title": "CuiStudio",
+    "description": "Edit app/index.tsx to edit this screen."
+  },
+  "language": {
+    "title": "Language",
+    "current": "Current language",
+    "english": "English",
+    "french": "Français"
+  }
+}

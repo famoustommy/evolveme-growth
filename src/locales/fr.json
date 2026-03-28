@@ -1,0 +1,25 @@
+{
+  "common": {
+    "welcome": "Bienvenue",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  },
+  "app": {
+    "title": "CuiStudio",
+    "description": "Modifiez app/index.tsx pour éditer cet écran."
+  },
+  "language": {
+    "title": "Langue",
+    "current": "Langue actuelle",
+    "english": "English",
+    "french": "Français"
+  }
+}
